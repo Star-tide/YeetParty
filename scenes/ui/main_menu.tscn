@@ -1,8 +1,9 @@
-[gd_scene load_steps=9 format=3 uid="uid://cwtv23k870nb3"]
+[gd_scene load_steps=10 format=3 uid="uid://cwtv23k870nb3"]
 
 [ext_resource type="Script" uid="uid://buy1ufn8vueqy" path="res://scripts/ui/main_menu.gd" id="1_1g8jr"]
 [ext_resource type="FontFile" uid="uid://bei0vak2h81li" path="res://assets/fonts/Boogaloo-Regular.ttf" id="1_fe2o3"]
 [ext_resource type="Script" uid="uid://dpb268dw6n1nv" path="res://scripts/ui/HoverScaleMenuButtons.gd" id="2_1g8jr"]
+[ext_resource type="AudioStream" uid="uid://cj3a0fjm6qp3x" path="res://assets/audio/music/Labubu - Tiger Backwood.wav" id="2_m1kxf"]
 
 [sub_resource type="Gradient" id="Gradient_87aya"]
 offsets = PackedFloat32Array(0.05882353, 0.24369748, 0.65966386, 1)
@@ -13,6 +14,21 @@ gradient = SubResource("Gradient_87aya")
 use_hdr = true
 fill_from = Vector2(-0.13, 0.635)
 fill_to = Vector2(1, 1)
+
+[sub_resource type="Animation" id="Animation_1g8jr"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(531, 0)]
+}
 
 [sub_resource type="Animation" id="Animation_fe2o3"]
 resource_name = "float"
@@ -32,21 +48,6 @@ tracks/0/keys = {
 "values": [Vector2(531, 0), Vector2(531, -5), Vector2(531, -10), Vector2(531, -15), Vector2(531, -10), Vector2(531, -5), Vector2(531, 0)]
 }
 
-[sub_resource type="Animation" id="Animation_1g8jr"]
-length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath(".:position")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector2(531, 0)]
-}
-
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_m1kxf"]
 _data = {
 &"RESET": SubResource("Animation_1g8jr"),
@@ -63,6 +64,11 @@ grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_1g8jr")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_m1kxf")
+volume_db = -6.0
+autoplay = true
 
 [node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
