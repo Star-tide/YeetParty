@@ -60,3 +60,9 @@ ui_down={
 [physics]
 
 3d/physics_engine="Jolt Physics"
+
+[steam]
+
+initialization/app_id=0
+initialization/initialize_on_startup=false
+initialization/embed_callbacks=false
