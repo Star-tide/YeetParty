@@ -1,0 +1,148 @@
+[gd_scene load_steps=9 format=3 uid="uid://cwtv23k870nb3"]
+
+[ext_resource type="Script" uid="uid://buy1ufn8vueqy" path="res://scripts/ui/main_menu.gd" id="1_1g8jr"]
+[ext_resource type="FontFile" uid="uid://bei0vak2h81li" path="res://assets/fonts/Boogaloo-Regular.ttf" id="1_fe2o3"]
+[ext_resource type="Script" uid="uid://dpb268dw6n1nv" path="res://scripts/ui/HoverScaleMenuButtons.gd" id="2_1g8jr"]
+
+[sub_resource type="Gradient" id="Gradient_87aya"]
+offsets = PackedFloat32Array(0.05882353, 0.24369748, 0.65966386, 1)
+colors = PackedColorArray(0.20784314, 0.16078432, 0.64705884, 1, 0.88606364, 4.4665336e-05, 0.6577103, 1, 0.2784314, 0.015686275, 0.6, 1, 0.9607843, 0.28235295, 0.627451, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_sl1te"]
+gradient = SubResource("Gradient_87aya")
+use_hdr = true
+fill_from = Vector2(-0.13, 0.635)
+fill_to = Vector2(1, 1)
+
+[sub_resource type="Animation" id="Animation_fe2o3"]
+resource_name = "float"
+length = 3.0
+loop_mode = 1
+step = 0.016666668
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5, 1, 1.5, 2, 2.5, 3),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(531, 0), Vector2(531, -5), Vector2(531, -10), Vector2(531, -15), Vector2(531, -10), Vector2(531, -5), Vector2(531, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_1g8jr"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(531, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_m1kxf"]
+_data = {
+&"RESET": SubResource("Animation_1g8jr"),
+&"float": SubResource("Animation_fe2o3")
+}
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_1g8jr")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("GradientTexture2D_sl1te")
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 32
+
+[node name="RootColumn" type="VBoxContainer" parent="SafeArea"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="Buttons" type="VBoxContainer" parent="SafeArea/RootColumn"]
+custom_minimum_size = Vector2(300, 300)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 6
+theme_override_constants/separation = 16
+script = ExtResource("2_1g8jr")
+
+[node name="HostButton" type="Button" parent="SafeArea/RootColumn/Buttons"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "Host Game"
+
+[node name="JoinButton" type="Button" parent="SafeArea/RootColumn/Buttons"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "Join Game"
+
+[node name="OptionButton" type="Button" parent="SafeArea/RootColumn/Buttons"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "Options"
+
+[node name="QuitButton" type="Button" parent="SafeArea/RootColumn/Buttons"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "Quit"
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -749.0
+offset_right = 757.0
+offset_bottom = 502.0
+grow_horizontal = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(1, 0.9411765, 0.28235295, 1)
+theme_override_colors/font_outline_color = Color(0.105882354, 0.05490196, 0.2901961, 1)
+theme_override_constants/shadow_offset_y = 0
+theme_override_constants/outline_size = 6
+theme_override_fonts/font = ExtResource("1_fe2o3")
+theme_override_font_sizes/font_size = 250
+text = "Yeet Party"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Title"]
+libraries = {
+&"": SubResource("AnimationLibrary_m1kxf")
+}
+
+[connection signal="pressed" from="SafeArea/RootColumn/Buttons/HostButton" to="." method="_on_host_button_pressed"]
+[connection signal="pressed" from="SafeArea/RootColumn/Buttons/JoinButton" to="." method="_on_join_button_pressed"]
+[connection signal="pressed" from="SafeArea/RootColumn/Buttons/OptionButton" to="." method="_on_option_button_pressed"]
+[connection signal="pressed" from="SafeArea/RootColumn/Buttons/QuitButton" to="." method="_on_quit_button_pressed"]

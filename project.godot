@@ -11,9 +11,16 @@ config_version=5
 [application]
 
 config/name="Yeet Party"
-run/main_scene="uid://yu6fqne564qc"
+run/main_scene="uid://cwtv23k870nb3"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=2560
+window/size/viewport_height=1440
+window/size/borderless=true
+window/stretch/mode="viewport"
 
 [input]
 
