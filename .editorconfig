@@ -1,0 +1,33 @@
+# ===============================
+# Yeet Party (Godot 4.5)
+# .editorconfig
+# ===============================
+
+# Root EditorConfig file
+root = true
+
+# Default settings for all files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Godot & code files
+[*.{gd,tscn,tres,shader,glsl,json,md}]
+indent_style = space
+indent_size = 4
+
+# YAML (GitHub workflows, etc.)
+[*.yml]
+indent_style = space
+indent_size = 2
+
+# Batch scripts (Windows)
+[*.bat]
+end_of_line = crlf
+indent_style = tab
+
+# Markdown exceptions (don't trim trailing spaces so lists stay aligned)
+[*.md]
+trim_trailing_whitespace = false

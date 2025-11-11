@@ -1,0 +1,53 @@
+[gd_scene load_steps=9 format=3 uid="uid://yu6fqne564qc"]
+
+[ext_resource type="PackedScene" uid="uid://kqy8woqyi54h" path="res://scenes/3d/characters/Player3D.tscn" id="1_7rewl"]
+[ext_resource type="Script" uid="uid://q6dcuihwi67a" path="res://scripts/ui/SmoothFollowPivot.gd" id="2_a8odr"]
+[ext_resource type="Script" uid="uid://27fn6p1ev5ih" path="res://scripts/ui/ScrollZoom.gd" id="3_jskfe"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fcdk7"]
+size = Vector3(50, 1, 50)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7rewl"]
+size = Vector3(50, 1, 50)
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_a8odr"]
+
+[sub_resource type="Sky" id="Sky_jskfe"]
+sky_material = SubResource("ProceduralSkyMaterial_a8odr")
+
+[sub_resource type="Environment" id="Environment_kcxkp"]
+background_mode = 2
+sky = SubResource("Sky_jskfe")
+ambient_light_color = Color(0.8784314, 0.9647059, 1, 1)
+
+[node name="Main3d" type="Node3D"]
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.81915206, 0.32898995, -0.46984634, 0, 0.81915206, 0.57357645, 0.57357645, -0.46984634, 0.6710101, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Ground" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
+shape = SubResource("BoxShape3D_fcdk7")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("BoxMesh_7rewl")
+
+[node name="Player3d" parent="." instance=ExtResource("1_7rewl")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_kcxkp")
+
+[node name="CameraPivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+script = ExtResource("2_a8odr")
+target_path = NodePath("../Player3d")
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.9848077, 0.17364818, 0, -0.17364818, 0.9848077, 0, 1.5, 6)
+script = ExtResource("3_jskfe")
+
+[node name="PitchPivot" type="Node3D" parent="CameraPivot"]
+
+[editable path="Player3d"]

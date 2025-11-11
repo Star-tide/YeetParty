@@ -1,0 +1,55 @@
+# ===============================
+# Yeet Party (Godot 4.5)
+# .gitattributes
+# ===============================
+
+# Ensure consistent text file handling
+* text=auto eol=lf
+
+# Godot scripts and resources (treat as text)
+*.gd     text diff
+*.tscn   text diff
+*.tres   text diff
+*.cfg    text diff
+*.json   text diff
+*.shader text diff
+*.glsl   text diff
+
+# Project and config files
+*.import text diff
+project.godot text diff
+.editorconfig text diff
+.gitattributes text
+.gitignore text
+README.md text
+LICENSE text
+*.md text
+
+# Windows batch scripts (keep CRLF)
+*.bat text eol=crlf
+
+# Shell scripts (force LF)
+*.sh text eol=lf
+
+# Binary assets
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.wav  binary
+*.ogg  binary
+*.mp3  binary
+*.ttf  binary
+*.otf  binary
+*.mp4  binary
+*.webm binary
+*.glb  binary
+*.fbx  binary
+
+# Prevent merge conflicts on binary files
+*.png  -merge
+*.jpg  -merge
+*.wav  -merge
+*.mp3  -merge
+*.glb  -merge
+*.fbx  -merge

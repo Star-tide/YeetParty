@@ -1,0 +1,68 @@
+# ===============================
+# Yeet Party (Godot 4.5)
+# ===============================
+
+# Godot engine generated folders
+.godot/
+.import/
+*.import
+
+# Build and export output
+builds/
+export/
+bin/
+*.exe
+*.pck
+*.zip
+*.tar.gz
+*.apk
+*.aab
+*.keystore
+
+# Logs and crash dumps
+logs/
+*.log
+*.cfg~
+*.crash
+*.dmp
+
+# Temporary and backup files
+*.tmp
+*.bak
+*.old
+*.orig
+*.save
+*.swo
+*.swp
+*.temp
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.code-workspace
+
+# OS-specific clutter
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# C# build artifacts (only relevant if you ever enable C#)
+.mono/
+*.csproj
+*.sln
+*.user
+*.dll
+*.mdb
+*.pdb
+obj/
+bin/
+
+# Optional runtime folders (keep static data like balance/localization)
+data/saves/
+data/cache/
+
+# ===============================
+# Tracked folders:
+# addons/, assets/, autoload/, data/, docs/, prefabs/,
+# scenes/, scripts/, shaders/, tests/, tools/
+# ===============================
