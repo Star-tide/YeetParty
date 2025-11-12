@@ -4,8 +4,8 @@
 
 
 # Must not remove
-!steamIntegration/windows/steam_api64.dll
-!addons\godotsteam\
+!steamIntegration/
+!addons/godotsteam
 # Godot engine generated folders
 .godot/
 .import/
