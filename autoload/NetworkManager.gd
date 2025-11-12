@@ -10,6 +10,7 @@ const STEAM_MANAGER_SCN := "res://steamIntegration/SteamManager.gd"
 var _steam_ok: bool = false
 var _steam_manager: Node = null
 var _enet_peer: ENetMultiplayerPeer = null
+var current_backend := "steam"
 
 func _ready() -> void:
 	# Your existing write (kept as-is)
@@ -38,8 +39,10 @@ func _ready() -> void:
 	_try_init_steam()
 	if _steam_ok:
 		_start_steam_manager()
+		current_backend = "steam"
 	else:
 		_init_enet_fallback()
+		current_backend = "enet"
 
 	# (Optional) quick print so you can see which path was chosen
 	print("Network path: ", "Steam" if _steam_ok else "ENet fallback")
