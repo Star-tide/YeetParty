@@ -66,8 +66,8 @@ func _on_lobby_joined(joined_lobby_id: int, permissions: int, locked: bool, resp
 		steam.connectP2P(host_id, CHANNEL, {})
 
 func _on_connection_status(connection_handle: int, arg1: Variant, arg2: Variant) -> void:
-	var state: int
-	var remote_id: int
+	var state: int = 0
+	var remote_id: int = 0
 
 	if arg1 is Dictionary:
 		state = int(arg1.get("connection_state", 0))
@@ -75,14 +75,24 @@ func _on_connection_status(connection_handle: int, arg1: Variant, arg2: Variant)
 	elif arg2 is Dictionary:
 		state = int(arg2.get("connection_state", 0))
 		remote_id = int(arg2.get("remote_steam_id", 0))
-	else:
-		print("Unexpected payload steam_session.gd 79")
-		return  # unexpected payload
+
+	if remote_id == 0 and steam.has_method("getConnectionInfo"):
+		var info: Dictionary = steam.getConnectionInfo(connection_handle)
+		print("Connection info:", info)
+		var identity_value: Variant = info.get("identity", null)
+		if identity_value is Dictionary:
+			var identity: Dictionary = identity_value
+			if identity.has("steam_id"):
+				remote_id = int(identity["steam_id"])
+		elif identity_value is int:
+			remote_id = identity_value
 
 	match state:
 		CONNECTION_STATE_CONNECTING, CONNECTION_STATE_FINDING_ROUTE:
+			print("Trying to connect…")
 			steam.acceptConnection(connection_handle)
 		CONNECTION_STATE_CONNECTED:
+			print("Peer connected! remote:", remote_id)
 			connection_handles[connection_handle] = remote_id
 			emit_signal("peer_connected", remote_id)
 		CONNECTION_STATE_CLOSED_BY_PEER, CONNECTION_STATE_PROBLEM_DETECTED:
