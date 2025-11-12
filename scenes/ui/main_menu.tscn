@@ -67,7 +67,7 @@ script = ExtResource("1_1g8jr")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("2_m1kxf")
-volume_db = -6.0
+volume_db = -35.0
 autoplay = true
 
 [node name="Background" type="TextureRect" parent="."]
@@ -147,6 +147,23 @@ vertical_alignment = 1
 libraries = {
 &"": SubResource("AnimationLibrary_m1kxf")
 }
+
+[node name="Lobbycode" type="LineEdit" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -230.0
+offset_top = -231.0
+offset_right = 227.0
+offset_bottom = -190.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+placeholder_text = "Lobby Code"
+alignment = 1
 
 [connection signal="pressed" from="SafeArea/RootColumn/Buttons/HostButton" to="." method="_on_host_button_pressed"]
 [connection signal="pressed" from="SafeArea/RootColumn/Buttons/JoinButton" to="." method="_on_join_button_pressed"]
