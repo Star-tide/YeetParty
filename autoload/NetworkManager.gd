@@ -6,10 +6,15 @@ const APPID_SRC := "res://steamIntegration/steam_appid.txt"
 const APPID_DEST := "user://steam_appid.txt"
 
 const STEAM_MANAGER_SCN := "res://steamIntegration/SteamManager.gd"
+const STEAM_SESSION := preload("res://scripts/net/steam_session.gd")
+const STEAM_BUS := preload("res://scripts/net/steam_message_bus.gd")
 
 var _steam_ok: bool = false
 var _steam_manager: Node = null
 var _enet_peer: ENetMultiplayerPeer = null
+var current_backend := "steam"
+var steam_session: SteamSession = null
+var steam_bus: SteamMessageBus = null
 
 func _ready() -> void:
 	# Your existing write (kept as-is)
@@ -37,14 +42,33 @@ func _ready() -> void:
 	# Decide: Steam or ENet
 	_try_init_steam()
 	if _steam_ok:
+		current_backend = "steam"
+		steam_session = STEAM_SESSION.new()
+		add_child(steam_session)
+		steam_bus = STEAM_BUS.new()
+		add_child(steam_bus)
+		steam_bus.setup(steam_session, true) # just prepares signals/maps
 		_start_steam_manager()
 	else:
 		_init_enet_fallback()
+		current_backend = "enet"
 
 	# (Optional) quick print so you can see which path was chosen
 	print("Network path: ", "Steam" if _steam_ok else "ENet fallback")
 
+func host_game(max_players := 4) -> void:
+	if _steam_ok and steam_session:
+		steam_session.host(max_players)
+	else:
+		_init_enet_fallback()
 
+func join_game(target: Variant) -> void:
+	if _steam_ok and steam_session:
+		if typeof(target) == TYPE_INT:
+			steam_session.join(target) #lobby ID
+		elif typeof(target) == TYPE_STRING:
+			enet_join(target)
+			
 func _process(_dt: float) -> void:
 	if _steam_ok and Engine.has_singleton("Steam"):
 		var s := Engine.get_singleton("Steam")

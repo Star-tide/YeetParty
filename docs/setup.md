@@ -11,6 +11,11 @@ This document explains how to install, open, and run **Yeet Party** in Godot 4.5
 - *(Optional)* Visual Studio Code with the Godot Tools extension  
 
 ---
+## Networking Modes
+- Steam must be running for online play (With Steam). When available, the game initializes the Steam backend automatically (see `autoload/NetworkManager.gd:37–45`).
+- If Steam is closed or initialization fails, the game automatically falls back to the existing ENet placeholder so you can still boot and test locally.
+
+TODO - Actually write the full enet code
 
 ## Installation
 1. Clone the repository:
@@ -19,13 +24,13 @@ This document explains how to install, open, and run **Yeet Party** in Godot 4.5
    cd YeetParty
 2. Open the project in Godot:
 
-    Launch Godot 4.5
+	Launch Godot 4.5
 
-    Click Import
+	Click Import
 
 3. Select project.godot in the root folder
 
-    Press F5 to run the game!
+	Press F5 to run the game!
 
 ## Folder Overview
 
