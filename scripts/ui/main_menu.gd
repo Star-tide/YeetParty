@@ -27,6 +27,7 @@ func _on_join_button_pressed() -> void:
 		print("Enter a lobby ID first")
 		return
 	var lobby_id := code.to_int()  # or keep as string if you later add hashes
+	print("Sending lobby IT to NetworkManager", lobby_id)
 	NetworkManager.join_game(lobby_id)
 
 func _on_option_button_pressed() -> void:

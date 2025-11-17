@@ -2,6 +2,10 @@
 # Yeet Party (Godot 4.5)
 # ===============================
 
+
+# Must not remove
+!steamIntegration/
+!addons/godotsteam
 # Godot engine generated folders
 .godot/
 .import/

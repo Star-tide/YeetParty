@@ -48,6 +48,7 @@ func _ready() -> void:
 		steam_bus = STEAM_BUS.new()
 		add_child(steam_bus)
 		steam_bus.setup(steam_session, true) # just prepares signals/maps
+		steam_bus.connect("peer_connected", Callable(self, "_on_steam_peer_connected"))
 		_start_steam_manager()
 	else:
 		_init_enet_fallback()
@@ -91,6 +92,10 @@ func _try_init_steam() -> void:
 			print("AppID: ", s.getAppID() if s.has_method("getAppID") else 0)
 			print("IsLoggedOn: ", logged_on)
 			print("Persona: ", s.getPersonaName() if s.has_method("getPersonaName") else "")
+
+func _on_steam_peer_connected(peer_id: int) -> void:
+	print("NetworkManager saw peer", peer_id)
+	emit_signal("steam_peer_connected", peer_id)
 
 func _start_steam_manager() -> void:
 	var SteamManager := load(STEAM_MANAGER_SCN)
