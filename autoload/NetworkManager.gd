@@ -1,5 +1,7 @@
 extends Node
 
+signal steam_peer_connected(peer_id: int)
+
 const STEAM_PATH := "res://steamIntegration/"
 const STEAM_DLL := "res://steamIntegration/windows/steam_api64.dll"
 const APPID_SRC := "res://steamIntegration/steam_appid.txt"
