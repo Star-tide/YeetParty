@@ -8,6 +8,7 @@ var target_peer := 0
 var incoming_packets: Array[PackedByteArray] = []
 var packet_senders: Array[int] = []
 var connected_peers := {}  # peer_id -> connection_handle
+var _transfer_mode := MultiplayerPeer.TRANSFER_MODE_RELIABLE
 
 func setup(session_ref: SteamSession, host_mode := true) -> void:
 	session = session_ref
@@ -17,32 +18,58 @@ func setup(session_ref: SteamSession, host_mode := true) -> void:
 
 func _poll() -> void:
 	for packet_info in session.poll_packets():
-		incoming_packets.append(packet_info["payload"])
-		packet_senders.append(packet_info["peer_id"])
-		emit_signal("peer_packet", packet_info["peer_id"])
+		var payload: PackedByteArray = packet_info.get("payload", PackedByteArray())
+		var peer_id: int = int(packet_info.get("peer_id", 0))
+		incoming_packets.append(payload)
+		packet_senders.append(peer_id)
+		emit_signal("peer_packet", peer_id)
 		
 
 func _get_available_packet_count() -> int:
 	return incoming_packets.size()
 
-func _get_packet(target_buffer: PackedByteArray, buffer_size: int) -> Error:
+func _get_packet(target_buffer, buffer_size: int) -> Error:
 	if incoming_packets.is_empty():
 		return ERR_UNAVAILABLE
 
-	var packet := incoming_packets.pop_front()
-	var sender := packet_senders.pop_front()
-	var length := min(buffer_size, packet.size())
-	target_buffer.resize(length)
-	target_buffer.set_data_array(packet.slice(0, length))
-	_set_packet_peer(sender)
+	if not (target_buffer is PackedByteArray):
+		return ERR_INVALID_PARAMETER
+
+	var buffer: PackedByteArray = target_buffer
+	var packet: PackedByteArray = incoming_packets.pop_front()
+	var sender: int = int(packet_senders.pop_front())
+	var length: int = min(buffer_size, packet.size())
+	buffer.resize(length)
+	for i in range(length):
+		buffer[i] = packet[i]
+	_assign_packet_peer(sender)
 	return OK
 
 
-func _put_packet(packet: PackedByteArray) -> int:
-	var handle := connected_peers.get(target_peer)
-	if handle == null:
-		return ERR_UNAVAILABLE
-	var err := session.send(handle, packet, transfer_mode != MultiplayerPeer.TRANSFER_MODE_UNRELIABLE)
-	return OK if err == OK else err
+func _put_packet(packet, _channel: int) -> Error:
+	if not (packet is PackedByteArray):
+		return ERR_INVALID_PARAMETER
 
-		
+	var payload: PackedByteArray = packet
+	var handle: int = int(connected_peers.get(target_peer, 0))
+	if handle == 0:
+		return ERR_UNAVAILABLE
+	var reliable := _transfer_mode != MultiplayerPeer.TRANSFER_MODE_UNRELIABLE
+	session.send(handle, payload, reliable)
+	return OK
+
+func _set_transfer_mode(mode: MultiplayerPeer.TransferMode) -> void:
+	_transfer_mode = mode
+
+func _get_transfer_mode() -> MultiplayerPeer.TransferMode:
+	return _transfer_mode
+
+func _on_packets_ready() -> void:
+	# MultiplayerPeerExtension will call _poll(), so this hook is just a placeholder for now.
+	pass
+
+func _assign_packet_peer(peer_id: int) -> void:
+	if has_method("_set_packet_peer"):
+		call("_set_packet_peer", peer_id)
+	elif has_method("set_packet_peer"):
+		call("set_packet_peer", peer_id)
