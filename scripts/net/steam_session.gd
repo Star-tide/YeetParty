@@ -66,8 +66,16 @@ func _on_lobby_created(result: int, created_lobby_id: int) -> void:
 	steam.setLobbyData(lobby_id, "host_id", str(local_steam_id))
 	if steam.has_method("setLobbyMemberLimit"):
 		steam.setLobbyMemberLimit(lobby_id, host_max_players)
+	else:
+		print("Steam API missing method: setLobbyMemberLimit")
 	if steam.has_method("setLobbyJoinable"):
 		steam.setLobbyJoinable(lobby_id, true)
+	else:
+		print("Steam API missing method: setLobbyJoinable")
+	if steam.has_method("setLobbyType"):
+		steam.setLobbyType(lobby_id, Steam.LOBBY_TYPE_PUBLIC)
+	else:
+		print("Steam API missing method: setLobbyType")
 	_assign_lobby_code()
 	listen_socket = steam.createListenSocketP2P(CHANNEL, {})
 	_log_lobby_metadata()
