@@ -151,27 +151,66 @@ func _assign_lobby_code() -> void:
 	print("Lobby short code assigned:", lobby_code)
 	emit_signal("lobby_code_assigned", lobby_code)
 
-func _on_lobby_match_list(lobby_count: int) -> void:
+func _on_lobby_match_list(result: Variant) -> void:
 	if pending_lobby_code_lookup == "":
 		return
-	print("lobby_match_list received:", lobby_count, "entries")
-	if lobby_count <= 0 or not steam.has_method("getLobbyByIndex"):
+
+	print("lobby_match_list payload:", result)
+	var lobby_ids: Array = []
+
+	if result is Array:
+		lobby_ids = result
+	elif result is Dictionary:
+		if result.has("lobbies"):
+			lobby_ids = result["lobbies"]
+		elif result.has("lobby_count"):
+			_process_lobby_indices(int(result["lobby_count"]))
+			return
+	elif result is int:
+		_process_lobby_indices(int(result))
+		return
+
+	if not lobby_ids.is_empty():
+		for entry_index in lobby_ids.size():
+			var entry := lobby_ids[entry_index]
+			var found_lobby_id := 0
+			if entry is Dictionary:
+				if entry.has("lobby"):
+					found_lobby_id = int(entry["lobby"])
+				elif entry.has("id"):
+					found_lobby_id = int(entry["id"])
+			else:
+				found_lobby_id = int(entry)
+
+			if _evaluate_lobby_candidate(found_lobby_id, entry_index):
+				return
+
+	_emit_lobby_code_lookup_failed()
+
+func _process_lobby_indices(count: int) -> void:
+	print("Processing lobby list of size:", count)
+	if count <= 0 or not steam.has_method("getLobbyByIndex"):
 		_emit_lobby_code_lookup_failed()
 		return
 
-	for i in range(lobby_count):
+	for i in range(count):
 		var found_lobby_id: int = int(steam.getLobbyByIndex(i))
-		if found_lobby_id == 0:
-			continue
-		var code: String = steam.getLobbyData(found_lobby_id, LOBBY_CODE_KEY)
-		print("Lobby entry", i, "->", found_lobby_id, "code:", code)
-		if LobbyCode.normalize(code) == pending_lobby_code_lookup:
-			var resolved_code := pending_lobby_code_lookup
-			pending_lobby_code_lookup = ""
-			emit_signal("lobby_code_lookup_succeeded", resolved_code, found_lobby_id)
+		if _evaluate_lobby_candidate(found_lobby_id, i):
 			return
 
 	_emit_lobby_code_lookup_failed()
+
+func _evaluate_lobby_candidate(found_lobby_id: int, entry_index: int) -> bool:
+	if found_lobby_id == 0:
+		return false
+	var code: String = steam.getLobbyData(found_lobby_id, LOBBY_CODE_KEY)
+	print("Lobby entry", entry_index, "->", found_lobby_id, "code:", code)
+	if LobbyCode.normalize(code) == pending_lobby_code_lookup:
+		var resolved_code := pending_lobby_code_lookup
+		pending_lobby_code_lookup = ""
+		emit_signal("lobby_code_lookup_succeeded", resolved_code, found_lobby_id)
+		return true
+	return false
 
 func _emit_lobby_code_lookup_failed(failed_code: String = "") -> void:
 	var code_to_report := failed_code if failed_code != "" else pending_lobby_code_lookup
