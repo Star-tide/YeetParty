@@ -64,7 +64,7 @@ func _on_lobby_created(result: int, created_lobby_id: int) -> void:
 	steam.setLobbyData(lobby_id, "host_id", str(local_steam_id))
 	_assign_lobby_code()
 	listen_socket = steam.createListenSocketP2P(CHANNEL, {})
-	print("Steam lobby ID:", lobby_id)  # <-- add this line
+	_log_lobby_metadata()
 	emit_signal("lobby_created", lobby_id)
 
 @warning_ignore("unused_parameter")
@@ -150,6 +150,7 @@ func _assign_lobby_code() -> void:
 		steam.setLobbyData(lobby_id, LOBBY_CODE_KEY, lobby_code)
 	print("Lobby short code assigned:", lobby_code)
 	emit_signal("lobby_code_assigned", lobby_code)
+	_log_lobby_metadata()
 
 func _on_lobby_match_list(result: Variant) -> void:
 	if pending_lobby_code_lookup == "":
@@ -217,6 +218,19 @@ func _emit_lobby_code_lookup_failed(failed_code: String = "") -> void:
 	pending_lobby_code_lookup = ""
 	print("No lobby found for short code:", code_to_report)
 	emit_signal("lobby_code_lookup_failed", code_to_report)
+
+func _log_lobby_metadata() -> void:
+	if lobby_id == 0:
+		return
+	var stored_code := ""
+	if steam.has_method("getLobbyData"):
+		stored_code = steam.getLobbyData(lobby_id, LOBBY_CODE_KEY)
+	var data := {
+		"id": lobby_id,
+		"short_code": stored_code,
+		"type": "public" if hosting else "unknown"
+	}
+	print("Lobby Meta Data:", data)
 
 
 func send(handle: int, payload: PackedByteArray, reliable := true) -> void:
