@@ -28,6 +28,7 @@ var connection_handles := {}      # handle -> steam_id
 var packet_queue: Array[Dictionary] = []
 var local_steam_id: int = 0
 var hosting := false
+var host_max_players := 4
 var lobby_code: String = ""
 var pending_lobby_code_lookup: String = ""
 var lobby_code_rng := RandomNumberGenerator.new()
@@ -50,6 +51,7 @@ func _ready() -> void:
 
 func host(max_players := 4) -> void:
 	hosting = true
+	host_max_players = max_players
 	steam.createLobby(Steam.LOBBY_TYPE_PUBLIC, max_players)
 
 func join(target_lobby: int) -> void:
@@ -62,6 +64,10 @@ func _on_lobby_created(result: int, created_lobby_id: int) -> void:
 		return
 	lobby_id = created_lobby_id
 	steam.setLobbyData(lobby_id, "host_id", str(local_steam_id))
+	if steam.has_method("setLobbyMemberLimit"):
+		steam.setLobbyMemberLimit(lobby_id, host_max_players)
+	if steam.has_method("setLobbyJoinable"):
+		steam.setLobbyJoinable(lobby_id, true)
 	_assign_lobby_code()
 	listen_socket = steam.createListenSocketP2P(CHANNEL, {})
 	_log_lobby_metadata()
@@ -137,6 +143,10 @@ func request_lobby_id_for_code(code: String) -> void:
 
 	print("Requesting lobby list for code:", normalized)
 	pending_lobby_code_lookup = normalized
+	if steam.has_method("addRequestLobbyListResultCountFilter"):
+		steam.addRequestLobbyListResultCountFilter(100)
+	if steam.has_method("addRequestLobbyListDistanceFilter"):
+		steam.addRequestLobbyListDistanceFilter(Steam.LOBBY_DISTANCE_FILTER_WORLDWIDE)
 	if steam.has_method("addRequestLobbyListStringFilter"):
 		steam.addRequestLobbyListStringFilter(LOBBY_CODE_KEY, pending_lobby_code_lookup, Steam.LOBBY_COMPARISON_EQUAL)
 	steam.requestLobbyList()
