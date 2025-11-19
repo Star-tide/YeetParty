@@ -254,7 +254,7 @@ func _log_lobby_metadata() -> void:
 		stored_code = steam.getLobbyData(lobby_id, LOBBY_CODE_KEY)
 	var data := {
 		"id": lobby_id,
-		"short_code": stored_code,
+		"shortcode": stored_code,
 		"type": "public" if hosting else "unknown"
 	}
 	print("Lobby Meta Data:", data)
