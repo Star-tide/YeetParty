@@ -135,6 +135,7 @@ func request_lobby_id_for_code(code: String) -> void:
 		_emit_lobby_code_lookup_failed(normalized)
 		return
 
+	print("Requesting lobby list for code:", normalized)
 	pending_lobby_code_lookup = normalized
 	if steam.has_method("addRequestLobbyListStringFilter"):
 		steam.addRequestLobbyListStringFilter(LOBBY_CODE_KEY, pending_lobby_code_lookup, Steam.LOBBY_COMPARISON_EQUAL)
