@@ -48,6 +48,8 @@ func _ready() -> void:
 	steam.connect("network_connection_status_changed", Callable(self, "_on_connection_status"))
 	if steam.has_signal("lobby_match_list"):
 		steam.connect("lobby_match_list", Callable(self, "_on_lobby_match_list"))
+	else:
+		print("Steam API missing signal: lobby_match_list")
 
 func host(max_players := 4) -> void:
 	hosting = true
