@@ -177,40 +177,39 @@ func _on_lobby_match_list(result: Variant) -> void:
 		return
 
 	print("lobby_match_list payload:", result)
-	var lobby_ids: Array = []
 
+	var lobby_ids: Array = []
 	if result is Array:
 		lobby_ids = result
-	elif result is Dictionary:
-		if result.has("lobbies"):
-			lobby_ids = result["lobbies"]
-		elif result.has("lobby_count"):
-			_process_lobby_indices(int(result["lobby_count"]))
-			return
-	elif result is int:
-		_process_lobby_indices(int(result))
-		return
+	elif result is Dictionary and result.has("lobbies"):
+		lobby_ids = result["lobbies"]
 
 	if not lobby_ids.is_empty():
+		print("Steam provided lobby IDs directly:", lobby_ids)
 		for entry_index in lobby_ids.size():
-			var entry: Variant = lobby_ids[entry_index]
-			var found_lobby_id := 0
-			if entry is Dictionary:
-				if entry.has("lobby"):
-					found_lobby_id = int(entry["lobby"])
-				elif entry.has("id"):
-					found_lobby_id = int(entry["id"])
-			else:
-				found_lobby_id = int(entry)
-
+			var found_lobby_id: int = int(lobby_ids[entry_index])
 			if _evaluate_lobby_candidate(found_lobby_id, entry_index):
 				return
+		print("No matching short code in provided lobby array.")
+		_emit_lobby_code_lookup_failed()
+		return
 
-	_emit_lobby_code_lookup_failed()
+	if not steam.has_method("getLobbyCount"):
+		print("Steam API missing method: getLobbyCount")
+		_emit_lobby_code_lookup_failed()
+		return
+
+	var total := int(steam.getLobbyCount())
+	print("Steam reports lobby count:", total)
+	_process_lobby_indices(total)
 
 func _process_lobby_indices(count: int) -> void:
 	print("Processing lobby list of size:", count)
 	if count <= 0 or not steam.has_method("getLobbyByIndex"):
+		if count <= 0:
+			print("Steam returned zero lobbies for this request.")
+		elif not steam.has_method("getLobbyByIndex"):
+			print("Steam API missing method: getLobbyByIndex")
 		_emit_lobby_code_lookup_failed()
 		return
 
@@ -223,6 +222,7 @@ func _process_lobby_indices(count: int) -> void:
 
 func _evaluate_lobby_candidate(found_lobby_id: int, entry_index: int) -> bool:
 	if found_lobby_id == 0:
+		print("Lobby entry", entry_index, "returned invalid ID")
 		return false
 	var code: String = steam.getLobbyData(found_lobby_id, LOBBY_CODE_KEY)
 	print("Lobby entry", entry_index, "->", found_lobby_id, "code:", code)
