@@ -50,7 +50,7 @@ func _ready() -> void:
 
 func host(max_players := 4) -> void:
 	hosting = true
-	steam.createLobby(Steam.LOBBY_TYPE_FRIENDS_ONLY, max_players)
+	steam.createLobby(Steam.LOBBY_TYPE_PUBLIC, max_players)
 
 func join(target_lobby: int) -> void:
 	hosting = false
