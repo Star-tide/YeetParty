@@ -7,9 +7,6 @@ signal peer_connected(steam_id: int)
 signal peer_disconnected(steam_id: int)
 @warning_ignore("unused_signal")
 signal packets_ready
-signal lobby_code_assigned(code: String)
-signal lobby_code_lookup_succeeded(code: String, lobby_id: int)
-signal lobby_code_lookup_failed(code: String)
 
 const CHANNEL := 0
 const MAX_PACKET := 8192
@@ -18,7 +15,6 @@ const CONNECTION_STATE_FINDING_ROUTE := 2
 const CONNECTION_STATE_CONNECTED := 3
 const CONNECTION_STATE_CLOSED_BY_PEER := 4
 const CONNECTION_STATE_PROBLEM_DETECTED := 5
-const LOBBY_CODE_KEY := "shortcode"
 
 var steam := Engine.get_singleton("Steam")
 var relay_required := true
@@ -29,9 +25,6 @@ var packet_queue: Array[Dictionary] = []
 var local_steam_id: int = 0
 var hosting := false
 var host_max_players := 4
-var lobby_code: String = ""
-var pending_lobby_code_lookup: String = ""
-var lobby_code_rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	# For printing Singlas sent out by the singleton
@@ -42,15 +35,9 @@ func _ready() -> void:
 
 	steam.allowP2PPacketRelay(relay_required)
 	local_steam_id = steam.getSteamID() if steam.has_method("getSteamID") else 0
-	lobby_code_rng.randomize()
-	_log_lobby_method_support()
 	steam.connect("lobby_created", Callable(self, "_on_lobby_created"))
 	steam.connect("lobby_joined", Callable(self, "_on_lobby_joined"))
 	steam.connect("network_connection_status_changed", Callable(self, "_on_connection_status"))
-	if steam.has_signal("lobby_match_list"):
-		steam.connect("lobby_match_list", Callable(self, "_on_lobby_match_list"))
-	else:
-		print("Steam API missing signal: lobby_match_list")
 
 func host(max_players := 4) -> void:
 	hosting = true
@@ -69,20 +56,12 @@ func _on_lobby_created(result: int, created_lobby_id: int) -> void:
 	steam.setLobbyData(lobby_id, "host_id", str(local_steam_id))
 	if steam.has_method("setLobbyMemberLimit"):
 		steam.setLobbyMemberLimit(lobby_id, host_max_players)
-	else:
-		print("Steam API missing method: setLobbyMemberLimit")
 	if steam.has_method("setLobbyJoinable"):
 		steam.setLobbyJoinable(lobby_id, true)
-	else:
-		print("Steam API missing method: setLobbyJoinable")
 	if steam.has_method("setLobbyType"):
 		steam.setLobbyType(lobby_id, Steam.LOBBY_TYPE_PUBLIC)
-	else:
-		print("Steam API missing method: setLobbyType")
-	_assign_lobby_code()
 	listen_socket = steam.createListenSocketP2P(CHANNEL, {})
-	_log_lobby_metadata()
-	call_deferred("_log_lobby_metadata_delayed")
+	print("Steam lobby ID:", lobby_id)
 	emit_signal("lobby_created", lobby_id)
 
 @warning_ignore("unused_parameter")
@@ -91,8 +70,6 @@ func _on_lobby_joined(joined_lobby_id: int, permissions: int, locked: bool, resp
 		push_error("Failed to join lobby %s (response %d)" % [joined_lobby_id, response])
 		return
 	lobby_id = joined_lobby_id
-	if steam.has_method("getLobbyData"):
-		lobby_code = steam.getLobbyData(lobby_id, LOBBY_CODE_KEY)
 	emit_signal("lobby_joined", lobby_id)
 	var host_str: String = steam.getLobbyData(lobby_id, "host_id")
 	if host_str != "":
@@ -124,7 +101,6 @@ func _on_connection_status(connection_handle: int, arg1: Variant, arg2: Variant)
 		if identity_id == local_steam_id:
 			return
 
-		print("Connection info:", info)
 		if identity_id != 0:
 			remote_id = identity_id
 
@@ -133,7 +109,6 @@ func _on_connection_status(connection_handle: int, arg1: Variant, arg2: Variant)
 
 	match state:
 		CONNECTION_STATE_CONNECTING, CONNECTION_STATE_FINDING_ROUTE:
-			print("Trying to connect…")
 			steam.acceptConnection(connection_handle)
 		CONNECTION_STATE_CONNECTED:
 			print("Peer connected! remote:", remote_id)
@@ -142,145 +117,6 @@ func _on_connection_status(connection_handle: int, arg1: Variant, arg2: Variant)
 		CONNECTION_STATE_CLOSED_BY_PEER, CONNECTION_STATE_PROBLEM_DETECTED:
 			connection_handles.erase(connection_handle)
 			emit_signal("peer_disconnected", remote_id)
-
-func request_lobby_id_for_code(code: String) -> void:
-	var normalized := LobbyCode.normalize(code)
-	if normalized.is_empty():
-		_emit_lobby_code_lookup_failed(code)
-		return
-
-	if not steam.has_method("requestLobbyList"):
-		_emit_lobby_code_lookup_failed(normalized)
-		return
-
-	print("Requesting lobby list for code:", normalized)
-	pending_lobby_code_lookup = normalized
-	if steam.has_method("addRequestLobbyListResultCountFilter"):
-		steam.addRequestLobbyListResultCountFilter(100)
-	if steam.has_method("addRequestLobbyListDistanceFilter"):
-		steam.addRequestLobbyListDistanceFilter(Steam.LOBBY_DISTANCE_FILTER_WORLDWIDE)
-	if steam.has_method("addRequestLobbyListStringFilter"):
-		print("Skipping shortcode filter: showing all visible lobbies")
-	steam.requestLobbyList()
-
-func get_lobby_code() -> String:
-	return lobby_code
-
-func _assign_lobby_code() -> void:
-	lobby_code = LobbyCode.generate(LobbyCode.DEFAULT_LENGTH, lobby_code_rng)
-	if steam.has_method("setLobbyData"):
-		steam.setLobbyData(lobby_id, LOBBY_CODE_KEY, lobby_code)
-	print("Lobby short code assigned:", lobby_code)
-	emit_signal("lobby_code_assigned", lobby_code)
-	_log_lobby_metadata()
-
-func _on_lobby_match_list(result: Variant) -> void:
-	if pending_lobby_code_lookup == "":
-		return
-
-	print("lobby_match_list payload:", result)
-
-	var lobby_ids: Array = []
-	if result is Array:
-		lobby_ids = result
-	elif result is Dictionary and result.has("lobbies"):
-		lobby_ids = result["lobbies"]
-
-	if not lobby_ids.is_empty():
-		print("Steam provided lobby IDs directly:", lobby_ids)
-		for entry_index in lobby_ids.size():
-			var found_lobby_id: int = int(lobby_ids[entry_index])
-			if _evaluate_lobby_candidate(found_lobby_id, entry_index):
-				return
-		print("No matching short code in provided lobby array.")
-		_emit_lobby_code_lookup_failed()
-		return
-
-	if not steam.has_method("getLobbyCount"):
-		print("Steam API missing method: getLobbyCount")
-		_emit_lobby_code_lookup_failed()
-		return
-
-	var total := int(steam.getLobbyCount())
-	print("Steam reports lobby count:", total)
-	_process_lobby_indices(total)
-
-	if steam.has_method("getLobbyList"):
-		var lobby_list: Variant = steam.getLobbyList()
-		print("Steam getLobbyList() result:", lobby_list)
-	else:
-		print("Steam API missing method: getLobbyList")
-
-func _process_lobby_indices(count: int) -> void:
-	print("Processing lobby list of size:", count)
-	if count <= 0 or not steam.has_method("getLobbyByIndex"):
-		if count <= 0:
-			print("Steam returned zero lobbies for this request.")
-		elif not steam.has_method("getLobbyByIndex"):
-			print("Steam API missing method: getLobbyByIndex")
-		_emit_lobby_code_lookup_failed()
-		return
-
-	for i in range(count):
-		var found_lobby_id: int = int(steam.getLobbyByIndex(i))
-		if _evaluate_lobby_candidate(found_lobby_id, i):
-			return
-
-	_emit_lobby_code_lookup_failed()
-
-func _evaluate_lobby_candidate(found_lobby_id: int, entry_index: int) -> bool:
-	if found_lobby_id == 0:
-		print("Lobby entry", entry_index, "returned invalid ID")
-		return false
-	var code: String = steam.getLobbyData(found_lobby_id, LOBBY_CODE_KEY)
-	print("Lobby entry", entry_index, "->", found_lobby_id, "code:", code)
-	if LobbyCode.normalize(code) == pending_lobby_code_lookup:
-		var resolved_code := pending_lobby_code_lookup
-		pending_lobby_code_lookup = ""
-		emit_signal("lobby_code_lookup_succeeded", resolved_code, found_lobby_id)
-		return true
-	return false
-
-func _emit_lobby_code_lookup_failed(failed_code: String = "") -> void:
-	var code_to_report := failed_code if failed_code != "" else pending_lobby_code_lookup
-	pending_lobby_code_lookup = ""
-	print("No lobby found for short code:", code_to_report)
-	emit_signal("lobby_code_lookup_failed", code_to_report)
-
-func _log_lobby_metadata() -> void:
-	if lobby_id == 0:
-		return
-	var stored_code := ""
-	if steam.has_method("getLobbyData"):
-		stored_code = steam.getLobbyData(lobby_id, LOBBY_CODE_KEY)
-	var data := {
-		"id": lobby_id,
-		"shortcode": stored_code,
-		"type": "public" if hosting else "unknown"
-	}
-	print("Lobby Meta Data:", data)
-
-func _log_lobby_metadata_delayed() -> void:
-	await get_tree().create_timer(3.0).timeout
-	_log_lobby_metadata()
-
-func _log_lobby_method_support() -> void:
-	var methods := [
-		"requestLobbyList",
-		"addRequestLobbyListStringFilter",
-		"addRequestLobbyListResultCountFilter",
-		"addRequestLobbyListDistanceFilter",
-		"getLobbyList",
-		"getLobbyCount",
-		"getLobbyByIndex",
-		"setLobbyData",
-		"setLobbyMemberLimit",
-		"setLobbyJoinable",
-		"setLobbyType"
-	]
-	for name in methods:
-		print("Steam method support - %s: %s" % [name, steam.has_method(name)])
-
 
 func send(handle: int, payload: PackedByteArray, reliable := true) -> void:
 	var flags := Steam.NETWORKING_SEND_RELIABLE if reliable else Steam.NETWORKING_SEND_UNRELIABLE
