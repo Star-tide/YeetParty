@@ -204,6 +204,10 @@ func _on_lobby_match_list(result: Variant) -> void:
 	print("Steam reports lobby count:", total)
 	_process_lobby_indices(total)
 
+	if steam.has_method("getLobbyList"):
+		var lobby_list := steam.getLobbyList()
+		print("Steam getLobbyList() result:", lobby_list)
+
 func _process_lobby_indices(count: int) -> void:
 	print("Processing lobby list of size:", count)
 	if count <= 0 or not steam.has_method("getLobbyByIndex"):
@@ -259,6 +263,7 @@ func _log_lobby_method_support() -> void:
 		"addRequestLobbyListStringFilter",
 		"addRequestLobbyListResultCountFilter",
 		"addRequestLobbyListDistanceFilter",
+		"getLobbyList",
 		"getLobbyCount",
 		"getLobbyByIndex",
 		"setLobbyData",
