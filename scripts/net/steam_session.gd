@@ -172,7 +172,7 @@ func _on_lobby_match_list(result: Variant) -> void:
 
 	if not lobby_ids.is_empty():
 		for entry_index in lobby_ids.size():
-			var entry := lobby_ids[entry_index]
+			var entry: Variant = lobby_ids[entry_index]
 			var found_lobby_id := 0
 			if entry is Dictionary:
 				if entry.has("lobby"):
