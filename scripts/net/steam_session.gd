@@ -18,7 +18,7 @@ const CONNECTION_STATE_FINDING_ROUTE := 2
 const CONNECTION_STATE_CONNECTED := 3
 const CONNECTION_STATE_CLOSED_BY_PEER := 4
 const CONNECTION_STATE_PROBLEM_DETECTED := 5
-const LOBBY_CODE_KEY := "short_code"
+const LOBBY_CODE_KEY := "shortcode"
 
 var steam := Engine.get_singleton("Steam")
 var relay_required := true
@@ -205,8 +205,10 @@ func _on_lobby_match_list(result: Variant) -> void:
 	_process_lobby_indices(total)
 
 	if steam.has_method("getLobbyList"):
-		var lobby_list := steam.getLobbyList()
+		var lobby_list: Variant = steam.getLobbyList()
 		print("Steam getLobbyList() result:", lobby_list)
+	else:
+		print("Steam API missing method: getLobbyList")
 
 func _process_lobby_indices(count: int) -> void:
 	print("Processing lobby list of size:", count)
