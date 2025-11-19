@@ -103,7 +103,7 @@ Want to help make **Yeet Party** even more chaotic?
 
 ## Credits
 
--Developed by Brandon and Connor. 
+-Developed by Brandon, Connor, and Thomas. 
 
 -Powered by the open-source Godot Engine
 
