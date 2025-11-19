@@ -43,6 +43,7 @@ func _ready() -> void:
 	steam.allowP2PPacketRelay(relay_required)
 	local_steam_id = steam.getSteamID() if steam.has_method("getSteamID") else 0
 	lobby_code_rng.randomize()
+	_log_lobby_method_support()
 	steam.connect("lobby_created", Callable(self, "_on_lobby_created"))
 	steam.connect("lobby_joined", Callable(self, "_on_lobby_joined"))
 	steam.connect("network_connection_status_changed", Callable(self, "_on_connection_status"))
@@ -251,6 +252,22 @@ func _log_lobby_metadata() -> void:
 		"type": "public" if hosting else "unknown"
 	}
 	print("Lobby Meta Data:", data)
+
+func _log_lobby_method_support() -> void:
+	var methods := [
+		"requestLobbyList",
+		"addRequestLobbyListStringFilter",
+		"addRequestLobbyListResultCountFilter",
+		"addRequestLobbyListDistanceFilter",
+		"getLobbyCount",
+		"getLobbyByIndex",
+		"setLobbyData",
+		"setLobbyMemberLimit",
+		"setLobbyJoinable",
+		"setLobbyType"
+	]
+	for name in methods:
+		print("Steam method support - %s: %s" % [name, steam.has_method(name)])
 
 
 func send(handle: int, payload: PackedByteArray, reliable := true) -> void:
