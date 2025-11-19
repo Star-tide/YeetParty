@@ -26,14 +26,12 @@ func _on_join_button_pressed() -> void:
 	if code.is_empty():
 		print("Enter a lobby ID first")
 		return
-	if code.is_valid_int():
-		var lobby_id := code.to_int()
-		print("Sending numeric lobby ID to NetworkManager", lobby_id)
-		NetworkManager.join_game(lobby_id)
-	else:
-		var short_code := code.to_upper()
-		print("Sending lobby short code to NetworkManager", short_code)
-		NetworkManager.join_game(short_code)
+	if not code.is_valid_int():
+		print("Lobby ID must be numeric")
+		return
+	var lobby_id := code.to_int()
+	print("Joining lobby via numeric ID:", lobby_id)
+	NetworkManager.join_game(lobby_id)
 
 func _on_option_button_pressed() -> void:
 	pass # Replace with function body.

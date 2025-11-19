@@ -69,16 +69,24 @@ func host_game(max_players := 4) -> void:
 
 func join_game(target: Variant) -> void:
 	if _steam_ok and steam_session:
-		if typeof(target) == TYPE_INT:
-			steam_session.join(target)
-		elif typeof(target) == TYPE_STRING:
-			var trimmed := String(target).strip_edges()
-			if trimmed.is_valid_int():
-				steam_session.join(trimmed.to_int())
-			else:
-				steam_session.request_lobby_id_for_code(trimmed)
-		else:
-			push_warning("Unsupported target for Steam join: %s" % typeof(target))
+		var lobby_id := 0
+		match typeof(target):
+			TYPE_INT:
+				lobby_id = int(target)
+			TYPE_STRING:
+				var trimmed := String(target).strip_edges()
+				if trimmed.is_valid_int():
+					lobby_id = trimmed.to_int()
+				else:
+					push_warning("Steam requires numeric lobby IDs. Received: %s" % target)
+					return
+			_:
+				push_warning("Unsupported target for Steam join: %s" % typeof(target))
+				return
+		if lobby_id <= 0:
+			push_warning("Invalid lobby ID: %s" % lobby_id)
+			return
+		steam_session.join(lobby_id)
 	elif typeof(target) == TYPE_STRING:
 		enet_join(target)
 			

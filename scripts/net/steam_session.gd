@@ -82,6 +82,7 @@ func _on_lobby_created(result: int, created_lobby_id: int) -> void:
 	_assign_lobby_code()
 	listen_socket = steam.createListenSocketP2P(CHANNEL, {})
 	_log_lobby_metadata()
+	call_deferred("_log_lobby_metadata_delayed")
 	emit_signal("lobby_created", lobby_id)
 
 @warning_ignore("unused_parameter")
@@ -159,7 +160,7 @@ func request_lobby_id_for_code(code: String) -> void:
 	if steam.has_method("addRequestLobbyListDistanceFilter"):
 		steam.addRequestLobbyListDistanceFilter(Steam.LOBBY_DISTANCE_FILTER_WORLDWIDE)
 	if steam.has_method("addRequestLobbyListStringFilter"):
-		steam.addRequestLobbyListStringFilter(LOBBY_CODE_KEY, pending_lobby_code_lookup, Steam.LOBBY_COMPARISON_EQUAL)
+		print("Skipping shortcode filter: showing all visible lobbies")
 	steam.requestLobbyList()
 
 func get_lobby_code() -> String:
@@ -258,6 +259,10 @@ func _log_lobby_metadata() -> void:
 		"type": "public" if hosting else "unknown"
 	}
 	print("Lobby Meta Data:", data)
+
+func _log_lobby_metadata_delayed() -> void:
+	await get_tree().create_timer(3.0).timeout
+	_log_lobby_metadata()
 
 func _log_lobby_method_support() -> void:
 	var methods := [
