@@ -15,6 +15,7 @@ var _enet_peer: ENetMultiplayerPeer = null
 var current_backend := "steam"
 var steam_session: SteamSession = null
 var steam_bus: SteamMessageBus = null
+var current_lobby_code: String = ""
 
 func _ready() -> void:
 	# Your existing write (kept as-is)
@@ -49,6 +50,9 @@ func _ready() -> void:
 		add_child(steam_bus)
 		steam_bus.setup(steam_session, true) # just prepares signals/maps
 		steam_bus.connect("peer_connected", Callable(self, "_on_steam_peer_connected"))
+		steam_session.connect("lobby_code_assigned", Callable(self, "_on_lobby_code_assigned"))
+		steam_session.connect("lobby_code_lookup_succeeded", Callable(self, "_on_lobby_code_lookup_succeeded"))
+		steam_session.connect("lobby_code_lookup_failed", Callable(self, "_on_lobby_code_lookup_failed"))
 		_start_steam_manager()
 	else:
 		_init_enet_fallback()
@@ -66,9 +70,17 @@ func host_game(max_players := 4) -> void:
 func join_game(target: Variant) -> void:
 	if _steam_ok and steam_session:
 		if typeof(target) == TYPE_INT:
-			steam_session.join(target) #lobby ID
+			steam_session.join(target)
 		elif typeof(target) == TYPE_STRING:
-			enet_join(target)
+			var trimmed := String(target).strip_edges()
+			if trimmed.is_valid_int():
+				steam_session.join(trimmed.to_int())
+			else:
+				steam_session.request_lobby_id_for_code(trimmed)
+		else:
+			push_warning("Unsupported target for Steam join: %s" % typeof(target))
+	elif typeof(target) == TYPE_STRING:
+		enet_join(target)
 			
 func _process(_dt: float) -> void:
 	if _steam_ok and Engine.has_singleton("Steam"):
@@ -122,3 +134,14 @@ func enet_join(address: String, port: int = 19000) -> void:
 		return
 	get_tree().get_multiplayer().multiplayer_peer = _enet_peer
 	print("ENet client connecting to %s:%d" % [address, port])
+
+func _on_lobby_code_assigned(code: String) -> void:
+	current_lobby_code = code
+	print("Share this lobby code:", code)
+
+func _on_lobby_code_lookup_succeeded(code: String, lobby_id: int) -> void:
+	print("Lobby code %s resolved to lobby ID %d" % [code, lobby_id])
+	steam_session.join(lobby_id)
+
+func _on_lobby_code_lookup_failed(code: String) -> void:
+	print("No lobby found for code:", code)
