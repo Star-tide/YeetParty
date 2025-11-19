@@ -148,12 +148,13 @@ func _assign_lobby_code() -> void:
 	lobby_code = LobbyCode.generate(LobbyCode.DEFAULT_LENGTH, lobby_code_rng)
 	if steam.has_method("setLobbyData"):
 		steam.setLobbyData(lobby_id, LOBBY_CODE_KEY, lobby_code)
-	print("Lobby short code:", lobby_code)
+	print("Lobby short code assigned:", lobby_code)
 	emit_signal("lobby_code_assigned", lobby_code)
 
 func _on_lobby_match_list(lobby_count: int) -> void:
 	if pending_lobby_code_lookup == "":
 		return
+	print("lobby_match_list received:", lobby_count, "entries")
 	if lobby_count <= 0 or not steam.has_method("getLobbyByIndex"):
 		_emit_lobby_code_lookup_failed()
 		return
@@ -163,6 +164,7 @@ func _on_lobby_match_list(lobby_count: int) -> void:
 		if found_lobby_id == 0:
 			continue
 		var code: String = steam.getLobbyData(found_lobby_id, LOBBY_CODE_KEY)
+		print("Lobby entry", i, "->", found_lobby_id, "code:", code)
 		if LobbyCode.normalize(code) == pending_lobby_code_lookup:
 			var resolved_code := pending_lobby_code_lookup
 			pending_lobby_code_lookup = ""
@@ -174,6 +176,7 @@ func _on_lobby_match_list(lobby_count: int) -> void:
 func _emit_lobby_code_lookup_failed(failed_code: String = "") -> void:
 	var code_to_report := failed_code if failed_code != "" else pending_lobby_code_lookup
 	pending_lobby_code_lookup = ""
+	print("No lobby found for short code:", code_to_report)
 	emit_signal("lobby_code_lookup_failed", code_to_report)
 
 
